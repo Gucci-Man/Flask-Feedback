@@ -19,11 +19,13 @@ db.create_all()
 
 toolbar = DebugToolbarExtension(app)
 
+
 @app.route('/')
 def home():
     """Redirect to /register"""
 
     return redirect('/register')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -32,7 +34,7 @@ def register():
     form = UserForm()
     if form.validate_on_submit():
         username = form.username.data
-        password = form.username.data
+        password = form.password.data
         email = form.email.data
         first_name = form.first_name.data
         last_name = form.last_name.data
@@ -44,9 +46,11 @@ def register():
         except IntegrityError:
             form.username.errors.append('Username taken. Please pick another')
             return render_template('register.html', form=form)
-        return redirect("/secret")
+        session['username'] = new_user.username
+        return redirect(f"/users/{username}")
 
     return render_template("register.html", form=form)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -59,18 +63,32 @@ def login():
 
         user = User.authenticate(username, password)
         if user:
-            flash(f"Welcome back, {user.username}!")
-            return redirect('/secret')
+            flash(f"Welcome back, {user.username}!", "primary")
+            session['username'] = user.username
+            return redirect(f'/users/{user.username}')
         else:
             form.username.errors = ["Invalid username/password."]
 
     return render_template('login.html', form=form)
 
 
+@app.route('/users/<username>')
+def secret(username):
+    """Shows info about the user"""
+
+    if "username" not in session:
+        flash("Please login first!", "danger")
+        return redirect('/login')
+    elif session['username'] != username:
+        flash("Wrong User!", "danger")
+        return redirect('/login')
+    else:
+        user = User.query.get_or_404(username)
+        return render_template("secret.html", user=user)
 
 
-@app.route('/secret')
-def secret():
-    """Secret view once user login/register"""
-
-    return render_template("secret.html")
+@app.route('/logout')
+def logout():
+    session.pop('username')
+    flash("Goodbye!")
+    return redirect('/')

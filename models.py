@@ -18,6 +18,8 @@ class User(db.Model):
 
     password = db.Column(db.Text, nullable=False)
 
+    plain_password = db.Column(db.Text, nullable=False)
+
     email = db.Column(db.String(50), nullable=False, unique=True)
 
     first_name = db.Column(db.String(30), nullable=False)
@@ -33,7 +35,7 @@ class User(db.Model):
         hashed_utf8 = hashed.decode('utf8')
 
         # return instance of user w/username and hashed pwd
-        return cls(username=username, password=hashed_utf8, email=email, first_name=first_name, last_name=last_name)
+        return cls(username=username, password=hashed_utf8, plain_password=pwd, email=email, first_name=first_name, last_name=last_name)
     
     @classmethod
     def authenticate(cls, username, pwd):
@@ -43,8 +45,6 @@ class User(db.Model):
         """
 
         u = User.query.filter_by(username=username).first()
-
-        print(u.password)
 
         if u and bcrypt.check_password_hash(u.password, pwd):
             # return user instance
