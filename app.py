@@ -71,10 +71,7 @@ def login():
 
     return render_template('login.html', form=form)
 
-# TODO - Show all feedback for that user
-# TODO - Display a link to form to edit the feedback
-# TODO - Have a button to delete the feedback
-# Only user can do these
+
 @app.route('/users/<username>')
 def secret(username):
     """Shows info about the user"""
@@ -90,7 +87,7 @@ def secret(username):
         feedback = Feedback.query.filter_by(username=username)
         return render_template("secret.html", user=user, feedback=feedback)
     
-# TODO - checks if this works 
+
 @app.route('/users/<username>/delete', methods=['POST'])
 def delete_user(username):
     """Delete user and all their feedback"""
@@ -169,7 +166,7 @@ def feedback_update(feedback_id):
     """Display form to update feedback"""
     feedback = Feedback.query.get_or_404(feedback_id)
     user = feedback.user
-    form = FeedbackForm()
+    form = UpdateFeedback()
 
     #Checks if user is login and is correct user
     if "username" not in session:

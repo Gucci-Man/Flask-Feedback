@@ -16,3 +16,7 @@ class LoginForm(FlaskForm):
 class FeedbackForm(FlaskForm):
     title = StringField("Title", validators=[InputRequired(), Length(max=100, message="Too long, max length is 100 characters")])
     content = StringField("Content", validators=[InputRequired()])
+
+class UpdateFeedback(FlaskForm):
+    title = StringField("Title", validators=[Length(max=100, message="Too long, max length is 100 characters")])
+    content = StringField("Content")
