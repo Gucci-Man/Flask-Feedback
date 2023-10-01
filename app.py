@@ -143,6 +143,28 @@ def add_feedback(username):
     
     return render_template('add_feedback.html', form=form, username=username)
 
+
+@app.route('/feedback/<int:feedback_id>/delete', methods=['POST'])
+def delete_feedback(feedback_id):
+    """Delete user's feedback"""
+    feedback = Feedback.query.get_or_404(feedback_id)
+    user = feedback.user
+
+    #Checks if user is login and is correct user
+    if "username" not in session:
+        flash("Please login first!", "danger")
+        return redirect('/login')
+    elif session['username'] != user.username:
+        flash("Wrong User! You don't have permission to delete that feedback!", "danger")
+        return redirect('/login')
+    
+    # Deleting feedback then redirect back to user profile
+    db.session.delete(feedback)
+    db.session.commit()
+    return redirect(f"/users/{user.username}")
+
+
+
 @app.route('/logout')
 def logout():
     session.pop('username')
