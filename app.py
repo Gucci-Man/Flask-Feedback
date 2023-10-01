@@ -84,7 +84,8 @@ def secret(username):
         return redirect('/login')
     else:
         user = User.query.get_or_404(username)
-        return render_template("secret.html", user=user)
+        feedback = Feedback.query.filter_by(username=username)
+        return render_template("secret.html", user=user, feedback=feedback)
 
 
 @app.route('/logout')
