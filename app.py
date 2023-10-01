@@ -115,7 +115,7 @@ def delete_user(username):
     User.query.filter_by(username=username).delete()
     db.session.commit()
     session.pop('username')
-
+    flash("User deleted", "danger")
     return redirect('/')
 
 
@@ -164,9 +164,38 @@ def delete_feedback(feedback_id):
     return redirect(f"/users/{user.username}")
 
 
+@app.route('/feedback/<int:feedback_id>/update', methods=['GET', 'POST'])
+def feedback_update(feedback_id):
+    """Display form to update feedback"""
+    feedback = Feedback.query.get_or_404(feedback_id)
+    user = feedback.user
+    form = FeedbackForm()
+
+    #Checks if user is login and is correct user
+    if "username" not in session:
+        flash("Please login first!", "danger")
+        return redirect('/login')
+    elif session['username'] != user.username:
+        flash("Wrong User! You don't have permission to update that feedback!", "danger")
+        return redirect('/login')
+    
+    if form.validate_on_submit():
+        # if new title, then update
+        if form.title.data:
+            feedback.title = form.title.data
+
+        # if new content, then update
+        if form.content.data:
+            feedback.content = form.content.data
+
+        db.session.commit()
+        return redirect(f"/users/{user.username}") # update then redirect back to user profile
+    
+    return render_template("update_feedback.html", form=form, username=user.username)
+
 
 @app.route('/logout')
 def logout():
     session.pop('username')
-    flash("Goodbye!")
+    flash("Goodbye!", "primary")
     return redirect('/')
