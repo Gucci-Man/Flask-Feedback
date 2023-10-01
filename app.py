@@ -71,7 +71,10 @@ def login():
 
     return render_template('login.html', form=form)
 
-
+# TODO - Show all feedback for that user
+# TODO - Display a link to form to edit the feedback
+# TODO - Have a button to delete the feedback
+# Only user can do these
 @app.route('/users/<username>')
 def secret(username):
     """Shows info about the user"""
@@ -80,13 +83,65 @@ def secret(username):
         flash("Please login first!", "danger")
         return redirect('/login')
     elif session['username'] != username:
-        flash("Wrong User!", "danger")
+        flash("Wrong User! Please login.", "danger")
         return redirect('/login')
     else:
         user = User.query.get_or_404(username)
         feedback = Feedback.query.filter_by(username=username)
         return render_template("secret.html", user=user, feedback=feedback)
+    
+# TODO - checks if this works 
+@app.route('/users/<username>/delete', methods=['POST'])
+def delete_user(username):
+    """Delete user and all their feedback"""
 
+    # Checks if user is login and is correct user
+    if "username" not in session:
+        flash("Please login first!", "danger")
+        return redirect('/login')
+    elif session['username'] != username:
+        flash("Wrong User!", "danger")
+        return redirect('/login')
+    
+    # Delete any feedback the user may have first
+    feedback = Feedback.query.filter_by(username=username).all()
+
+    if len(feedback) != 0:
+        for feed in feedback:
+            Feedback.query.filter_by(id=feed.id).delete()
+            db.session.commit()
+    
+    # Deleting the user and remove from session
+    User.query.filter_by(username=username).delete()
+    db.session.commit()
+    session.pop('username')
+
+    return redirect('/')
+
+
+@app.route('/users/<username>/feedback/add', methods=['GET', 'POST'])
+def add_feedback(username):
+    """Display a form to add feedback. Only user can see this."""
+
+    # Checks if user is login and is correct user
+    if "username" not in session:
+        flash("Please login first!", "danger")
+        return redirect('/login')
+    elif session['username'] != username:
+        flash("Wrong User!", "danger")
+        return redirect('/login')
+    
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.title.data
+        new_feed = Feedback(title=title, content=content, username=username)
+        db.session.add(new_feed)
+        db.session.commit()
+        flash('Feedback Created!', 'success')
+        return redirect(f'/users/{username}') # Redirect to user profile after adding feedback
+    
+    return render_template('add_feedback.html', form=form, username=username)
 
 @app.route('/logout')
 def logout():
